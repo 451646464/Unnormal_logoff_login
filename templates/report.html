@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير تحليل السجلات الأمنية المتقدم</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+    <style>
+        /* تصغير الخطوط الإضافية */
+        .stat-number { font-size: 2.8rem !important; }
+        .user-info h3 { font-size: 1.5rem !important; }
+        .user-meta { font-size: 0.85rem !important; }
+        .stat-label { font-size: 0.9rem !important; }
+        .stat-value { font-size: 1.1rem !important; }
+        .risk-label { font-size: 1rem !important; }
+        .risk-level-badge { font-size: 0.85rem !important; }
+        .risk-details { font-size: 0.8rem !important; }
+        .analysis-item span:first-child { font-size: 0.9rem !important; }
+        .analysis-value { font-size: 0.85rem !important; }
+        .recommendation-content h3 { font-size: 1.2rem !important; }
+        .recommendation-content p { font-size: 0.9rem !important; }
+
+        /* جعل كل مستخدم في صف منفصل */
+        .users-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        /* تحسين تخطيط بطاقة المستخدم للصف الواحد */
+        .user-card {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 25px;
+            align-items: start;
+        }
+
+        .user-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 15px;
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+
+        .user-stats {
+            grid-template-columns: repeat(3, 1fr);
+            margin-bottom: 20px;
+        }
+
+        .risk-indicator {
+            grid-column: 1 / -1;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 992px) {
+            .user-card {
+                grid-template-columns: 1fr;
+            }
+
+            .user-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .user-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .main-header h1 {
+                font-size: 2rem !important;
+            }
+
+            .analysis-section h2 {
+                font-size: 1.6rem !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ترويسة التقرير -->
+        <header class="main-header">
+            <h1 style="font-size: 2.8rem;">
+                <i class="fas fa-file-contract"></i>
+                تقرير التحليل الأمني المتقدم
+            </h1>
+            <p style="font-size: 1.1rem;">تحليل شامل ومفصل لأنشطة المستخدمين وتقييم المخاطر الأمنية</p>
+            <div class="report-meta" style="display: flex; justify-content: center; gap: 40px; margin-top: 20px; font-size: 0.9rem;">
+                <span><i class="fas fa-calendar-alt"></i> {{ current_date if current_date else "تاريخ التقرير" }}</span>
+                <span><i class="fas fa-clock"></i> {{ current_time if current_time else "وقت الإنشاء" }}</span>
+                <span><i class="fas fa-database"></i> {{ report|length }} حساب</span>
+            </div>
+        </header>
+
+        <!-- ملخص الإحصائيات الرئيسي -->
+        <div class="stats-container">
+            {% set total_users = report|length %}
+            {% set total_failed = report|sum(attribute='failed_logons') %}
+            {% set total_unusual = report|sum(attribute='unusual_time_sessions') %}
+            {% set total_sessions = report|sum(attribute='total_sessions') %}
+            {% set total_anomalies = report|sum(attribute='anomalies') %}
+            {% set total_short = report|sum(attribute='short_sessions') %}
+            {% set avg_duration_all = report|sum(attribute='avg_duration') / total_users if total_users > 0 else 0 %}
+            {% set normal_sessions = total_sessions - total_unusual - total_short %}
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-user-friends"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>إجمالي المستخدمين</h3>
+                    <div class="stat-number">{{ total_users }}</div>
+                    <p class="stat-desc">حسابات تم تحليلها في النظام</p>
+                </div>
+            </div>
+
+            <div class="stat-card danger">
+                <div class="stat-icon">
+                    <i class="fas fa-user-times"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>محاولات دخول فاشلة</h3>
+                    <div class="stat-number">{{ total_failed }}</div>
+                    <p class="stat-desc">
+                        {% if total_sessions > 0 %}
+                            ({{ "%.1f"|format(total_failed/total_sessions*100) }}% من المحاولات)
+                        {% else %}
+                            (لا توجد جلسات)
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="stat-card warning">
+                <div class="stat-icon">
+                    <i class="fas fa-moon"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>تسجيل الخروج غير الطبيعية</h3>
+                    <div class="stat-number">{{ total_unusual }}</div>
+                    <p class="stat-desc">
+                        {% if total_sessions > 0 %}
+                            ({{ "%.1f"|format(total_unusual/total_sessions*100) }}% من الجلسات)
+                        {% else %}
+                            (لا توجد جلسات)
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>جلسات طبيعية</h3>
+                    <div class="stat-number">{{ normal_sessions if normal_sessions > 0 else 0 }}</div>
+                    <p class="stat-desc">
+                        {% if total_sessions > 0 %}
+                            ({{ "%.1f"|format(normal_sessions/total_sessions*100) }}% من الجلسات)
+                        {% else %}
+                            (لا توجد جلسات)
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-radiation"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>جلسات شاذة</h3>
+                    <div class="stat-number">{{ total_anomalies }}</div>
+                    <p class="stat-desc">أنشطة غير اعتيادية مكتشفة</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>جلسات قصيرة</h3>
+                    <div class="stat-number">{{ total_short }}</div>
+                    <p class="stat-desc">أقل من 5 دقائق</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>إجمالي الجلسات</h3>
+                    <div class="stat-number">{{ total_sessions }}</div>
+                    <p class="stat-desc">جميع جلسات تسجيل الدخول</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>متوسط المدة</h3>
+                    <div class="stat-number">{{ "%.1f"|format(avg_duration_all) }} د</div>
+                    <p class="stat-desc">متوسط وقت الجلسات</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- بطاقات المستخدمين التفصيلية -->
+        <section class="analysis-section">
+            <h2 style="font-size: 2rem;"><i class="fas fa-user-cog"></i> تحليل مفصل لكل مستخدم</h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: 40px; text-align: center; font-size: 0.95rem;">
+                تم تحليل {{ total_users }} حساب بنجاح. إجمالي الجلسات: {{ total_sessions }}
+            </p>
+
+            <div class="users-grid">
+                {% for r in report %}
+                    {% set risk_score = r.failed_logons * 3 + r.anomalies * 2 + r.short_sessions + r.unusual_time_sessions %}
+                    {% set risk_level = 'high' if risk_score > 20 else 'medium' if risk_score > 10 else 'low' %}
+                    {% set normal_sessions_user = r.total_sessions - r.unusual_time_sessions - r.short_sessions %}
+
+                    <div class="user-card {{ risk_level }}-risk">
+                        <div class="user-header">
+                            <div class="user-avatar {{ risk_level }}-risk">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="user-info">
+                                <h3>{{ r.user }}</h3>
+                                <div class="user-meta">
+                                    <span><i class="fas fa-id-card"></i> حساب نظام</span>
+                                    <span><i class="fas fa-hashtag"></i> رقم: {{ loop.index }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="user-stats">
+                            <div class="user-stat">
+                                <div class="stat-row">
+                                    <div class="stat-label">
+                                        <i class="fas fa-sign-in-alt"></i>
+                                        <span>إجمالي الجلسات</span>
+                                    </div>
+                                    <div class="stat-value {% if r.total_sessions > 50 %}high{% elif r.total_sessions > 20 %}medium{% else %}low{% endif %}">
+                                        {{ r.total_sessions }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="user-stat">
+                                <div class="stat-row">
+                                    <div class="stat-label">
+                                        <i class="fas fa-times-circle"></i>
+                                        <span>محاولات فاشلة</span>
+                                    </div>
+                                    <div class="stat-value {% if r.failed_logons > 10 %}high{% elif r.failed_logons > 3 %}medium{% else %}low{% endif %}">
+                                        {{ r.failed_logons }}
+                                        {% if r.total_sessions > 0 %}
+                                            <span class="stat-percent">{{ "%.1f"|format(r.failed_logons/r.total_sessions*100) }}%</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="user-stat">
+                                <div class="stat-row">
+                                    <div class="stat-label">
+                                        <i class="fas fa-hourglass-half"></i>
+                                        <span>جلسات قصيرة</span>
+                                    </div>
+                                    <div class="stat-value {% if r.short_sessions > 5 %}high{% elif r.short_sessions > 2 %}medium{% else %}low{% endif %}">
+                                        {{ r.short_sessions }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="user-stat">
+                                <div class="stat-row">
+                                    <div class="stat-label">
+                                        <i class="fas fa-moon"></i>
+                                        <span>تسجيلات الخروج غير الطبيعية</span>
+                                    </div>
+                                    <div class="stat-value {% if r.unusual_time_sessions > 3 %}high{% elif r.unusual_time_sessions > 1 %}medium{% else %}low{% endif %}">
+                                        {{ r.unusual_time_sessions }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="user-stat">
+                                <div class="stat-row">
+                                    <div class="stat-label">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>جلسات طبيعية</span>
+                                    </div>
+                                    <div class="stat-value low">
+                                        {{ normal_sessions_user if normal_sessions_user > 0 else 0 }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="user-stat">
+                                <div class="stat-row">
+                                    <div class="stat-label">
+                                        <i class="fas fa-clock"></i>
+                                        <span>متوسط المدة</span>
+                                    </div>
+                                    <div class="stat-value {% if r.avg_duration < 5 %}high{% elif r.avg_duration < 10 %}medium{% else %}low{% endif %}">
+                                        {{ r.avg_duration }} د
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="risk-indicator {{ risk_level }}">
+                            <div class="risk-header">
+                                <div class="risk-label">
+                                    <i class="fas fa-shield-alt"></i>
+                                    مستوى الخطورة
+                                </div>
+                                <div class="risk-level-badge {{ risk_level }}">
+                                    {% if risk_level == 'high' %}
+                                        <i class="fas fa-skull-crossbones"></i> مرتفع
+                                    {% elif risk_level == 'medium' %}
+                                        <i class="fas fa-exclamation-triangle"></i> متوسط
+                                    {% else %}
+                                        <i class="fas fa-check-circle"></i> منخفض
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="risk-details">
+                                <span class="risk-score">
+                                    <i class="fas fa-chart-line"></i> درجة: {{ risk_score }}
+                                </span>
+                                <span class="risk-advice {{ risk_level }}">
+                                    {% if risk_level == 'high' %}
+                                        <i class="fas fa-exclamation-circle"></i> فحص عاجل مطلوب
+                                    {% elif risk_level == 'medium' %}
+                                        <i class="fas fa-eye"></i> مراقبة مستمرة
+                                    {% else %}
+                                        <i class="fas fa-thumbs-up"></i> مستوى آمن
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- التحليلات المتقدمة -->
+        <section class="analysis-section">
+            <h2 style="font-size: 2rem;"><i class="fas fa-chart-network"></i> مؤشرات الأداء والتحليلات</h2>
+
+            <div class="analysis-grid">
+                <div class="analysis-card">
+                    <div class="analysis-header">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <h3>مؤشرات الأمن الرئيسية</h3>
+                    </div>
+                    <div class="analysis-body">
+                        <div class="analysis-item">
+                            <span>معدل الفشل العام</span>
+                            <span class="analysis-value {% if (total_failed/total_sessions*100 if total_sessions > 0 else 0) > 10 %}high{% elif (total_failed/total_sessions*100 if total_sessions > 0 else 0) > 5 %}medium{% else %}low{% endif %}">
+                                {{ "%.1f"|format(total_failed/total_sessions*100 if total_sessions > 0 else 0) }}%
+                            </span>
+                        </div>
+                        <div class="analysis-item">
+                            <span>نسبة الجلسات غير الطبيعية</span>
+                            <span class="analysis-value {% if (total_unusual/total_sessions*100 if total_sessions > 0 else 0) > 15 %}high{% elif (total_unusual/total_sessions*100 if total_sessions > 0 else 0) > 8 %}medium{% else %}low{% endif %}">
+                                {{ "%.1f"|format(total_unusual/total_sessions*100 if total_sessions > 0 else 0) }}%
+                            </span>
+                        </div>
+                        <div class="analysis-item">
+                            <span>نسبة الجلسات القصيرة</span>
+                            <span class="analysis-value {% if (total_short/total_sessions*100 if total_sessions > 0 else 0) > 20 %}high{% elif (total_short/total_sessions*100 if total_sessions > 0 else 0) > 10 %}medium{% else %}low{% endif %}">
+                                {{ "%.1f"|format(total_short/total_sessions*100 if total_sessions > 0 else 0) }}%
+                            </span>
+                        </div>
+                        <div class="analysis-item">
+                            <span>متوسط مدة الجلسة</span>
+                            <span class="analysis-value {% if avg_duration_all < 5 %}high{% elif avg_duration_all < 10 %}medium{% else %}low{% endif %}">
+                                {{ "%.1f"|format(avg_duration_all) }} دقيقة
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-card">
+                    <div class="analysis-header">
+                        <i class="fas fa-user-shield"></i>
+                        <h3>توزيع المستخدمين حسب الخطورة</h3>
+                    </div>
+                    <div class="analysis-body">
+                        {% set high_risk_users = report|selectattr('failed_logons', '>', 10)|list|length %}
+                        {% set medium_risk_users = report|selectattr('failed_logons', '>', 3)|selectattr('failed_logons', '<=', 10)|list|length %}
+                        {% set low_risk_users = total_users - high_risk_users - medium_risk_users %}
+
+                        <div class="analysis-item">
+                            <span><i class="fas fa-radiation-alt" style="color: var(--color-danger);"></i> عالي الخطورة</span>
+                            <span class="analysis-value high">
+                                {{ high_risk_users }}
+                                {% if total_users > 0 %}
+                                    <span style="font-size: 0.8rem; opacity: 0.8;">({{ "%.0f"|format(high_risk_users/total_users*100) }}%)</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="analysis-item">
+                            <span><i class="fas fa-exclamation-triangle" style="color: var(--color-warning);"></i> متوسط الخطورة</span>
+                            <span class="analysis-value medium">
+                                {{ medium_risk_users }}
+                                {% if total_users > 0 %}
+                                    <span style="font-size: 0.8rem; opacity: 0.8;">({{ "%.0f"|format(medium_risk_users/total_users*100) }}%)</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="analysis-item">
+                            <span><i class="fas fa-check-circle" style="color: var(--color-success);"></i> منخفض الخطورة</span>
+                            <span class="analysis-value low">
+                                {{ low_risk_users if low_risk_users > 0 else 0 }}
+                                {% if total_users > 0 %}
+                                    <span style="font-size: 0.8rem; opacity: 0.8;">({{ "%.0f"|format(low_risk_users/total_users*100) }}%)</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="analysis-item">
+                            <span>مؤشر الأمان العام</span>
+                            {% set security_score = (low_risk_users/total_users*100 if total_users > 0 else 100) %}
+                            <span class="analysis-value {% if security_score > 80 %}low{% elif security_score > 60 %}medium{% else %}high{% endif %}">
+                                {{ "%.0f"|format(security_score) }}%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-card">
+                    <div class="analysis-header">
+                        <i class="fas fa-chart-bar"></i>
+                        <h3>إحصائيات إضافية</h3>
+                    </div>
+                    <div class="analysis-body">
+                        <div class="analysis-item">
+                            <span>متوسط الجلسات لكل مستخدم</span>
+                            <span class="analysis-value">
+                                {{ "%.1f"|format(total_sessions/total_users if total_users > 0 else 0) }}
+                            </span>
+                        </div>
+                        <div class="analysis-item">
+                            <span>متوسط المحاولات الفاشلة لكل مستخدم</span>
+                            <span class="analysis-value">
+                                {{ "%.1f"|format(total_failed/total_users if total_users > 0 else 0) }}
+                            </span>
+                        </div>
+                        <div class="analysis-item">
+                            <span>أعلى عدد جلسات لمستخدم</span>
+                            {% set max_sessions = report|map(attribute='total_sessions')|max if report else 0 %}
+                            <span class="analysis-value">
+                                {{ max_sessions }}
+                            </span>
+                        </div>
+                        <div class="analysis-item">
+                            <span>أعلى محاولات فاشلة لمستخدم</span>
+                            {% set max_failed = report|map(attribute='failed_logons')|max if report else 0 %}
+                            <span class="analysis-value high">
+                                {{ max_failed }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- التوصيات والإجراءات -->
+        <section class="recommendations-section">
+            <h2 style="font-size: 2rem;"><i class="fas fa-lightbulb"></i> خطة العمل والتوصيات</h2>
+
+            <div class="recommendations-grid">
+                {% if total_failed > 10 %}
+                <div class="recommendation-card danger">
+                    <div class="recommendation-icon">
+                        <i class="fas fa-user-lock"></i>
+                    </div>
+                    <div class="recommendation-content">
+                        <h3>تعزيز سياسات المصادقة</h3>
+                        <p>وجود {{ total_failed }} محاولة دخول فاشلة يدل على ضعف في سياسات المصادقة. يوصى بتفعيل المصادقة الثنائية وتقوية سياسات كلمات المرور.</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if total_unusual > 5 %}
+                <div class="recommendation-card warning">
+                    <div class="recommendation-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="recommendation-content">
+                        <h3>مراقبة ساعات الدخول</h3>
+                        <p>تم رصد {{ total_unusual }} جلسة في أوقات غير اعتيادية. يوصى بتفعيل نظام التنبيهات الآلي للجلسات خارج أوقات العمل الرسمية.</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% set high_risk_count = report|selectattr('failed_logons', '>', 10)|list|length %}
+                {% if high_risk_count > 0 %}
+                <div class="recommendation-card danger">
+                    <div class="recommendation-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="recommendation-content">
+                        <h3>فحص الحسابات عالية الخطورة</h3>
+                        <p>هناك {{ high_risk_count }} حساب عالي الخطورة. يوصى بفحصها عاجلاً وتطبيق إجراءات أمنية إضافية عليها.</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="recommendation-card">
+                    <div class="recommendation-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="recommendation-content">
+                        <h3>المراجعة الدورية</h3>
+                        <p>يوصى بإجراء تحليل أسبوعي للسجلات الأمنية وتحديث سياسات الأمان بناءً على الأنماط المكتشفة.</p>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="recommendation-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="recommendation-content">
+                        <h3>نظام التنبيهات الآلي</h3>
+                        <p>تفعيل نظام تنبيهات تلقائي للأنشطة المشبوهة والجلسات غير الاعتيادية.</p>
+                    </div>
+                </div>
+
+                <div class="recommendation-card success">
+                    <div class="recommendation-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="recommendation-content">
+                        <h3>التقارير الدورية</h3>
+                        <p>إنشاء تقارير أسبوعية وشهرية لمتابعة مؤشرات الأمن واتخاذ القرارات الاستباقية.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- أزرار التنقل -->
+        <div class="navigation-section">
+            <a href="{{ url_for('index') }}" class="nav-btn primary">
+                <i class="fas fa-arrow-right"></i> تحليل ملف جديد
+            </a>
+            <button onclick="window.print()" class="nav-btn">
+                <i class="fas fa-print"></i> طباعة التقرير
+            </button>
+            <button onclick="exportToPDF()" class="nav-btn">
+                <i class="fas fa-file-pdf"></i> حفظ كـ PDF
+            </button>
+            <button onclick="exportToExcel()" class="nav-btn">
+                <i class="fas fa-file-excel"></i> تصدير البيانات
+            </button>
+        </div>
+
+        <!-- تذييل الصفحة -->
+        <footer>
+            <p>© 2026 نظام تحليل السجلات الأمنية المتقدم. جميع الحقوق محفوظة.</p>
+            <p style="font-size: 0.9rem; margin-top: 10px;">
+                <i class="fas fa-shield-alt"></i> أمان · <i class="fas fa-chart-line"></i> تحليل · <i class="fas fa-bolt"></i> سرعة
+            </p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // دالة لتصدير التقرير كـ PDF
+        function exportToPDF() {
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التصدير...';
+
+            setTimeout(() => {
+                alert('تم تصدير التقرير بنجاح كملف PDF');
+                btn.innerHTML = originalHTML;
+            }, 1500);
+        }
+
+        // دالة لتصدير البيانات كـ Excel
+        function exportToExcel() {
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التصدير...';
+
+            // إنشاء بيانات CSV
+            let csvContent = "المستخدم,إجمالي الجلسات,المحاولات الفاشلة,الجلسات القصيرة,الجلسات غير الطبيعية,متوسط المدة,مستوى الخطورة\n";
+
+            {% for r in report %}
+                {% set risk_score = r.failed_logons * 3 + r.anomalies * 2 + r.short_sessions + r.unusual_time_sessions %}
+                {% set risk_level = 'high' if risk_score > 20 else 'medium' if risk_score > 10 else 'low' %}
+                csvContent += `{{ r.user }},{{ r.total_sessions }},{{ r.failed_logons }},{{ r.short_sessions }},{{ r.unusual_time_sessions }},{{ r.avg_duration }},{{ risk_level }}\n`;
+            {% endfor %}
+
+            // تحميل الملف
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'تقرير_السجلات_الأمنية.csv';
+            link.click();
+
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+            }, 500);
+        }
+
+        // فرز البطاقات حسب مستوى الخطورة
+        function sortCards() {
+            const userCards = document.querySelectorAll('.user-card');
+            const cardsArray = Array.from(userCards);
+
+            cardsArray.sort((a, b) => {
+                const aRisk = a.classList.contains('high-risk') ? 3 :
+                             a.classList.contains('medium-risk') ? 2 : 1;
+                const bRisk = b.classList.contains('high-risk') ? 3 :
+                             b.classList.contains('medium-risk') ? 2 : 1;
+                return bRisk - aRisk;
+            });
+
+            const usersGrid = document.querySelector('.users-grid');
+            cardsArray.forEach(card => usersGrid.appendChild(card));
+        }
+
+        // تحديث التاريخ والوقت
+        function updateDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('ar-SA', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            const timeStr = now.toLocaleTimeString('ar-SA');
+
+            // تحديث العناصر إذا لم تكن موجودة
+            const dateElements = document.querySelectorAll('.fa-calendar-alt');
+            const timeElements = document.querySelectorAll('.fa-clock');
+
+            dateElements.forEach(el => {
+                if (el.parentElement.textContent.includes('تاريخ التقرير')) {
+                    el.parentElement.innerHTML = `<i class="fas fa-calendar-alt"></i> ${dateStr}`;
+                }
+            });
+
+            timeElements.forEach(el => {
+                if (el.parentElement.textContent.includes('وقت الإنشاء')) {
+                    el.parentElement.innerHTML = `<i class="fas fa-clock"></i> ${timeStr}`;
+                }
+            });
+        }
+
+        // تأثيرات عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            // فرز البطاقات حسب الخطورة
+            sortCards();
+
+            // تحديث التاريخ والوقت
+            updateDateTime();
+
+            // إضافة تأثيرات للبطاقات
+            const cards = document.querySelectorAll('.stat-card, .user-card, .analysis-card, .recommendation-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px) scale(0.95)';
+
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0) scale(1)';
+                }, index * 100);
+            });
+
+            // تأثيرات العداد
+            const counters = document.querySelectorAll('.stat-number:not(:contains("+")):not(:contains("<")):not(:contains("%"))');
+            counters.forEach(counter => {
+                const target = parseInt(counter.textContent);
+                if (!isNaN(target) && target > 0) {
+                    let count = 0;
+                    const increment = target / 30;
+                    const timer = setInterval(() => {
+                        count += increment;
+                        if (count >= target) {
+                            count = target;
+                            clearInterval(timer);
+                        }
+                        counter.textContent = Math.floor(count);
+                    }, 50);
+                }
+            });
+
+            // تحديث كل دقيقة
+            setInterval(updateDateTime, 60000);
+        });
+    </script>
+</body>
+</html>

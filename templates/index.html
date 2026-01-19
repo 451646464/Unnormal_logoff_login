@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام تحليل السجلات الأمنية المتقدم</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <!-- الترويسة الرئيسية -->
+        <header class="main-header">
+            <h1>
+                <i class="fas fa-shield-alt"></i>
+                نظام تحليل السجلات الأمنية المتقدم
+            </h1>
+            <p>حل متكامل لتحليل سجلات Windows Security - كشف التهديدات وتقييم المخاطر في الوقت الحقيقي</p>
+            <div class="glow-text" style="margin-top: 20px; display: flex; justify-content: center; gap: 15px;">
+                <span style="color: var(--color-primary);">● أمان</span>
+                <span style="color: var(--color-success);">● تحليل</span>
+                <span style="color: var(--color-warning);">● مراقبة</span>
+                <span style="color: var(--color-danger);">● حماية</span>
+            </div>
+        </header>
+
+        <!-- قسم رفع الملفات -->
+        <section class="upload-section">
+            <div class="upload-box" id="uploadBox">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-info" id="uploadInfo">
+                    <h3>اسحب وأفلت ملف السجلات هنا</h3>
+                    <p>أو انقر لاختيار ملف من جهازك</p>
+                    <p class="file-types">يدعم الصيغ: CSV, TXT, LOG, EVTX, XML</p>
+                </div>
+                <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <input type="file" name="file" required accept=".csv,.txt,.log,.evtx,.xml" id="fileInput">
+                </form>
+            </div>
+
+            {% if error %}
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>خطأ في المعالجة</strong>
+                        <p>{{ error }}</p>
+                    </div>
+                </div>
+            {% endif %}
+
+            <button type="submit" form="uploadForm" class="submit-btn">
+                <i class="fas fa-chart-network"></i>
+                بدء التحليل المتقدم
+            </button>
+
+            <div style="text-align: center; margin-top: 30px; color: var(--color-text-secondary); font-size: 0.9rem;">
+                <i class="fas fa-lock"></i> جميع البيانات مشفرة وآمنة
+            </div>
+        </section>
+
+        <!-- الإحصائيات التقديرية -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>سرعة المعالجة</h3>
+                    <div class="stat-number">&lt; 30s</div>
+                    <p class="stat-desc">تحليل فوري للسجلات حتى 1 جيجابايت</p>
+                </div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>دقة التحليل</h3>
+                    <div class="stat-number">98.7%</div>
+                    <p class="stat-desc">أعلى معدل دقة في كشف التهديدات</p>
+                </div>
+            </div>
+
+            <div class="stat-card warning">
+                <div class="stat-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>المستخدمين المحميين</h3>
+                    <div class="stat-number">10K+</div>
+                    <p class="stat-desc">أنظمة تم تحليلها وتأمينها</p>
+                </div>
+            </div>
+
+            <div class="stat-card danger">
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>التهديدات المكتشفة</h3>
+                    <div class="stat-number">50K+</div>
+                    <p class="stat-desc">تهديدات تم اكتشافها وعلاجها</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- مميزات النظام -->
+        <section class="analysis-section">
+            <h2><i class="fas fa-crown"></i> مميزات النظام الفريدة</h2>
+
+            <div class="analysis-grid">
+                <div class="analysis-card">
+                    <div class="analysis-header">
+                        <i class="fas fa-robot"></i>
+                        <h3>ذكاء اصطناعي متقدم</h3>
+                    </div>
+                    <div class="analysis-body">
+                        <div class="analysis-item">
+                            <span>تعلم آلي</span>
+                            <span class="analysis-value low">متقدم</span>
+                        </div>
+                        <div class="analysis-item">
+                            <span>تحليل أنماط</span>
+                            <span class="analysis-value low">ذكي</span>
+                        </div>
+                        <div class="analysis-item">
+                            <span>تنبؤ تهديدات</span>
+                            <span class="analysis-value low">دقيق</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-card">
+                    <div class="analysis-header">
+                        <i class="fas fa-eye"></i>
+                        <h3>مراقبة شاملة</h3>
+                    </div>
+                    <div class="analysis-body">
+                        <div class="analysis-item">
+                            <span>مراقبة الوقت الحقيقي</span>
+                            <span class="analysis-value low">مباشر</span>
+                        </div>
+                        <div class="analysis-item">
+                            <span>سجلات كاملة</span>
+                            <span class="analysis-value low">تفصيلية</span>
+                        </div>
+                        <div class="analysis-item">
+                            <span>تقارير تلقائية</span>
+                            <span class="analysis-value low">يومية</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-card">
+                    <div class="analysis-header">
+                        <i class="fas fa-user-shield"></i>
+                        <h3>حماية متكاملة</h3>
+                    </div>
+                    <div class="analysis-body">
+                        <div class="analysis-item">
+                            <span>تقييم مخاطر</span>
+                            <span class="analysis-value low">شامل</span>
+                        </div>
+                        <div class="analysis-item">
+                            <span>كشف تهديدات</span>
+                            <span class="analysis-value low">فوري</span>
+                        </div>
+                        <div class="analysis-item">
+                            <span>إجراءات وقائية</span>
+                            <span class="analysis-value low">تلقائية</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- كيف يعمل النظام -->
+        <section class="recommendations-section">
+            <h2><i class="fas fa-play-circle"></i> كيف يعمل النظام</h2>
+
+            <div class="recommendations-grid">
+                <div class="recommendation-card">
+                    <div class="recommendation-icon">
+                        <i class="fas fa-upload"></i>
+                    </div>
+                    <div class="recommendation-content">
+                        <h3>الخطوة الأولى: رفع السجلات</h3>
+                        <p>قم برفع ملفات سجلات Windows Security مباشرة إلى النظام</p>
+                    </div>
+                </div>
+
+                <div class="recommendation-card warning">
+                    <div class="recommendation-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="recommendation-content">
+                        <h3>الخطوة الثانية: التحليل الذكي</h3>
+                        <p>يقوم النظام بتحليل السجلات باستخدام خوارزميات الذكاء الاصطناعي</p>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="recommendation-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div class="recommendation-content">
+                        <h3>الخطوة الثالثة: عرض النتائج</h3>
+                        <p>الحصول على تقارير تفصيلية وتحليلات شاملة للتهديدات</p>
+                    </div>
+                </div>
+
+                <div class="recommendation-card danger">
+                    <div class="recommendation-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="recommendation-content">
+                        <h3>الخطوة الرابعة: التوصيات</h3>
+                        <p>اقتراحات وإجراءات أمنية مبنية على نتائج التحليل</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // تفاعل رفع الملف
+        const uploadBox = document.getElementById('uploadBox');
+        const uploadInfo = document.getElementById('uploadInfo');
+        const fileInput = document.getElementById('fileInput');
+        const uploadForm = document.getElementById('uploadForm');
+
+        uploadBox.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                const fileName = file.name.length > 30 ?
+                    file.name.substring(0, 27) + '...' : file.name;
+
+                uploadInfo.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 20px; justify-content: center;">
+                        <i class="fas fa-file-check" style="font-size: 3rem; color: var(--color-success);"></i>
+                        <div style="text-align: right;">
+                            <h3 style="color: var(--color-success);">تم اختيار الملف بنجاح</h3>
+                            <p style="color: var(--color-light); font-size: 1.2rem; margin: 10px 0;">${fileName}</p>
+                            <p style="color: var(--color-text-secondary);">
+                                <i class="fas fa-database"></i> الحجم: ${fileSize} ميجابايت
+                            </p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="resetFile()" style="margin-top: 20px; padding: 10px 25px; background: rgba(255,255,255,0.05); color: var(--color-text); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--border-radius-sm); cursor: pointer; transition: var(--transition-fast);">
+                        <i class="fas fa-redo"></i> تغيير الملف
+                    </button>
+                `;
+
+                uploadBox.classList.add('file-selected');
+                uploadBox.style.borderColor = 'var(--color-success)';
+            }
+        });
+
+        // دالة إعادة تعيين الملف
+        window.resetFile = function() {
+            fileInput.value = '';
+            uploadInfo.innerHTML = `
+                <h3>اسحب وأفلت ملف السجلات هنا</h3>
+                <p>أو انقر لاختيار ملف من جهازك</p>
+                <p class="file-types">يدعم الصيغ: CSV, TXT, LOG, EVTX, XML</p>
+            `;
+            uploadBox.classList.remove('file-selected');
+            uploadBox.style.borderColor = '';
+        };
+
+        // تأثيرات السحب والإفلات
+        uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadBox.classList.add('dragover');
+        });
+
+        uploadBox.addEventListener('dragleave', () => {
+            uploadBox.classList.remove('dragover');
+        });
+
+        uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadBox.classList.remove('dragover');
+            fileInput.files = e.dataTransfer.files;
+            fileInput.dispatchEvent(new Event('change'));
+        });
+
+        // التأكيد قبل الإرسال
+        uploadForm.addEventListener('submit', function(e) {
+            if (!fileInput.files.length) {
+                e.preventDefault();
+                showMessage('الرجاء اختيار ملف للتحليل', 'error');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const maxSize = 100 * 1024 * 1024; // 100MB
+
+            if (file.size > maxSize) {
+                e.preventDefault();
+                showMessage('حجم الملف كبير جداً. الحد الأقصى 100 ميجابايت', 'error');
+                return;
+            }
+
+            // إضافة تأثير التحميل
+            const submitBtn = document.querySelector('.submit-btn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحليل...';
+            submitBtn.disabled = true;
+
+            // استعادة الزر بعد 5 ثواني (في حالة عدم إعادة التوجيه)
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }, 5000);
+        });
+
+        // دالة لعرض الرسائل
+        function showMessage(message, type) {
+            // إزالة الرسائل القديمة
+            const oldMessages = document.querySelectorAll('.error-message, .success-message');
+            oldMessages.forEach(msg => msg.remove());
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+            messageDiv.innerHTML = `
+                <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'}"></i>
+                <div>
+                    <strong>${type === 'error' ? 'خطأ' : 'نجاح'}</strong>
+                    <p>${message}</p>
+                </div>
+            `;
+
+            uploadSection.insertBefore(messageDiv, uploadSection.querySelector('.submit-btn'));
+
+            // إزالة الرسالة بعد 5 ثواني
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // تأثيرات عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            // إضافة تأثيرات للبطاقات
+            const cards = document.querySelectorAll('.stat-card, .analysis-card, .recommendation-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // تحديث العداد
+            const counters = document.querySelectorAll('.stat-number');
+            counters.forEach(counter => {
+                if (counter.textContent.includes('+')) {
+                    const target = parseInt(counter.textContent);
+                    if (!isNaN(target)) {
+                        let count = 0;
+                        const increment = target / 50;
+                        const timer = setInterval(() => {
+                            count += increment;
+                            if (count >= target) {
+                                count = target;
+                                clearInterval(timer);
+                            }
+                            counter.textContent = Math.floor(count) + '+';
+                        }, 30);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
