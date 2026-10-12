@@ -233,7 +233,7 @@ No license terms are specified here. Check the repository for a `LICENSE` file o
 
 ## Author
 
-Created by [451646464](https://github.com/451646464).
+Created by Rakan AL-Muliki.
 
 ---
 
