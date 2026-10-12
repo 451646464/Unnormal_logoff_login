@@ -1,136 +1,241 @@
-# 🛡️ Abnormal Logon/Logoff Session Analysis
+<div align="center">
 
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
-[![Flask](https://img.shields.io/badge/Flask-2.0%2B-green)](https://flask.palletsprojects.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
+# Hex Forensics Analyzer
 
-> A professional tool for analyzing Windows event CSV files to detect anomalous sessions using machine learning.
+### Advanced Hex File Extractor & Builder
 
----
+**Extract, analyze, and rebuild multiple files from raw hex data — built for digital forensics, malware analysis, and reverse engineering.**
 
-## 📖 About
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&logoColor=white)
+![GUI](https://img.shields.io/badge/GUI-Tkinter-informational)
+![Status](https://img.shields.io/badge/Status-Active-success)
+![License](https://img.shields.io/badge/Use-Educational%20%26%20Research-orange)
 
-This project analyzes CSV files containing Windows system events (such as logon and logoff events) and uses a pre-trained machine learning model to identify anomalous sessions. It provides a simple web interface for uploading files and viewing detailed reports per user.
+[Features](#features) •
+[Screenshots](#screenshots) •
+[Installation](#installation) •
+[Usage](#usage) •
+[How It Works](#how-it-works) •
+[Project Structure](#project-structure) •
+[Author](#author)
 
-### ✨ Features
-- Easy CSV file upload.
-- Automatic extraction of logon/logoff sessions.
-- Calculates session duration and counts failed logon attempts.
-- Detects anomalous sessions using a pre-trained machine learning model.
-- Provides a comprehensive report per user including:
-  - Total number of sessions.
-  - Total failed logon attempts.
-  - Number of short sessions.
-  - Number of sessions during unusual hours.
-  - Number of abnormal logoffs (sessions without a matching logoff event).
-  - Number of anomalous sessions detected by the model.
-  - Average session duration.
+</div>
 
 ---
 
-## 📥 Installation & Usage
+## Overview
 
-### 1. Requirements
-- Python 3.8 or higher.
-- pip (Python package manager).
+**Hex Forensics Analyzer** is a desktop application that takes raw hexadecimal data — pasted directly or loaded from a text/hex file — and automatically locates, extracts, analyzes, and reconstructs the files hidden inside it.
 
-### 2. Clone the Repository
+It is designed for situations where several files are concatenated in a single hex stream, such as memory dumps, network captures, carved disk regions, or embedded payloads.
+
+**Typical use cases**
+
+| Field | Example |
+|---|---|
+| Malware Analysis | Extracting embedded executables or droppers from a hex payload |
+| Digital Forensics | Carving files out of raw dumps during an investigation |
+| File Recovery | Rebuilding files from partially damaged or mixed data |
+| Reverse Engineering | Inspecting headers, trailers, and structure of unknown binaries |
+
+---
+
+## Features
+
+### Smart Extraction Engine
+- Cleans and validates raw hex input
+- Detects file signatures and boundaries automatically
+- Extracts **multiple files from a single hex stream**
+- Tolerates corrupted or mixed data
+
+### Supported File Types
+
+| Category | Formats |
+|---|---|
+| Images | `JPG`, `PNG`, `BMP` |
+| Executables | `EXE`, `DLL` |
+| Documents | `PDF`, `TXT` |
+| Media | `MP3`, `MP4`, `MOV` |
+
+### Deep File Analysis
+- Signature (magic bytes) detection
+- Header and trailer inspection, with sizes and hex previews
+- **MD5** hash for every extracted file
+- Detailed per-file view (double-click any file in the list)
+- Full hex data viewer
+
+### Reconstruction & Export
+- Rebuild all extracted files into an output folder
+- Save each file's raw hex
+- Export a complete **JSON extraction report**
+
+### Modern Desktop GUI
+- Clean multi-tab interface: **Hex Input → Extracted Files → File Reconstruction**
+- Real-time console log and progress bar
+- Background processing, so the interface stays responsive
+- Statistics panel and one-click *Clear All Data*
+
+---
+
+## Screenshots
+
+> Add your screenshots to `docs/screenshots/` and keep the paths below.
+
+<div align="center">
+
+![Main Window](docs/screenshots/main.png)
+
+</div>
+
+---
+
+## Installation
+
+### Requirements
+- **Python 3.10** or newer
+- **Windows** (the app uses Windows-specific features such as opening result folders automatically)
+- Tkinter (included with the standard Python installer)
+
+### 1. Clone the repository
+
 ```bash
-git clone https://github.com/451646464/Unnormal_logoff_login.git
-cd Unnormal_logoff_login
+git clone https://github.com/451646464/Hex-Forensics-Analyzer.git
+cd Hex-Forensics-Analyzer
 ```
 
-### 3. Create a Virtual Environment (Recommended)
+### 2. Create a virtual environment
+
 ```bash
-python -m venv venv
-# Activate the environment:
-# Windows
-venv\Scripts\activate
-# Linux/macOS
-source venv/bin/activate
+python -m venv .venv
+.venv\Scripts\activate
 ```
 
-### 4. Install Dependencies
+### 3. Install dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
-If `requirements.txt` does not exist, create it with the following content:
-```txt
-Flask==2.0.3
-pandas==1.5.3
-joblib==1.2.0
-scikit-learn==1.2.2
-chardet==5.1.0
-```
 
-### 5. Run the Application
+### 4. Run the application
+
 ```bash
-python app.py
-```
-Once running, open your browser and go to `http://127.0.0.1:5000/`.
-
-### 6. Use the Tool
-- Select a CSV file containing Windows events (must include columns: `Date and Time`, `Keywords`, `Event ID`).
-- Click the "Analyze" button.
-- A detailed report for each user will be displayed.
-
----
-
-## 📂 Project Structure
-```
-Unnormal_logoff_login/
-├── app.py                      # Main Flask application
-├── models/                     # Pre-trained models and scaler
-│   ├── logon_logoff_anomaly_model.pkl
-│   └── scaler.pkl
-├── templates/                  # HTML templates
-│   ├── index.html              # File upload page
-│   └── report.html             # Report page
-├── requirements.txt            # Python dependencies
-├── README.md                   # This file
-└── LICENSE                     # Project license (optional)
+python Hex_Bulding_GUI.py
 ```
 
 ---
 
-## 📄 Input CSV Format
-The CSV file must contain at least the following columns:
-- **Date and Time**: The timestamp of the event (e.g., `23/05/2024 14:30:00`).
-- **Keywords**: Field containing the username in the format `Account Name: username`.
-- **Event ID**: The Windows event ID (e.g., `4624` for logon, `4634` for logoff, `4625` for failed logon).
+## Usage
 
-### Example Row:
+1. **Provide hex data**
+   Open the **Hex Input** tab, then either paste hex data into the text area or load it from a `.txt` / `.hex` file.
+2. **Process**
+   Click **Process Hex Data** (or**Load and Process File**). Watch progress in the console and progress bar.
+3. **Review the results**
+   The app jumps to **Extracted Files**, listing each file's ID, type, size, header/trailer preview, and signature. Double-click a file for full details, including its MD5 hash.
+4. **Rebuild and export**
+   In **File Reconstruction**, choose an output directory and:
+   - **Rebuild All Files** — write the reconstructed files to disk
+   - **Save Hex Files** — save each file's hex representation
+   - **Save Extraction Report** — export everything as JSON
+
+---
+
+## How It Works
+
 ```
-Date and Time,Keywords,Event ID
-23/05/2024 14:30:00,"Account Name: JohnDoe",4624
+ Raw Hex Input
+      │
+      ▼
+ ┌──────────────┐   ┌────────────────────┐   ┌──────────────────┐
+ │ Clean &      │ → │ Detect signatures  │ → │ Extract file     │
+ │ validate hex │   │ & file boundaries  │   │ segments         │
+ └──────────────┘   └────────────────────┘   └──────────────────┘
+                                                      │
+                                                      ▼
+ ┌──────────────┐   ┌────────────────────┐   ┌──────────────────┐
+ │ Rebuild &    │ ← │ Report (JSON) &    │ ← │ Analyze header,  │
+ │ save files   │   │ hex export         │   │ trailer, MD5     │
+ └──────────────┘   └────────────────────┘   └──────────────────┘
 ```
 
 ---
 
-## 🔧 Troubleshooting
-- **Missing required columns**: Ensure your CSV has `Date and Time`, `Keywords`, and `Event ID`. The tool attempts to auto‑detect similar column names.
-- **Incorrect date format**: The system tries multiple common formats. If dates still fail, check the format in your file.
-- **Model files not found**: Verify that the `models/` folder exists and contains the two `.pkl` files.
-- **No usernames extracted**: The `Keywords` column must contain the text `Account Name:` followed by the actual username.
+## Project Structure
+
+```
+Hex-Forensics-Analyzer/
+├── Hex_Bulding_GUI.py     # Tkinter desktop application (entry point)
+├── Hex_Bulding.py         # Core engine: parsing, extraction, analysis, rebuilding
+├── hex_config.json        # Configuration file
+├── hex..py, hexr.py,
+│   rakan.py               # Additional helper scripts
+├── requirements.txt       # Python dependencies
+├── .gitignore
+└── README.md
+```
 
 ---
 
-## 🤝 Contributing
-You can contribute by:
-- Opening an **Issue** to suggest improvements or report bugs.
-- Submitting a **Pull Request** with new features or fixes.
+## Limitations
+
+- Very large hex inputs can take longer to process.
+- Encrypted or heavily obfuscated data may not be detected.
+- Accuracy depends on the integrity of the input hex data.
+- Currently targeted at Windows.
 
 ---
 
-## 📜 License
-This project is licensed under the **MIT License** – see the `LICENSE` file for details.
+## Roadmap
+
+- [ ] Cross-platform support (Linux / macOS)
+- [ ] Support for more file signatures (ZIP, GIF, DOCX, ELF, …)
+- [ ] Command-line interface for scripting and automation
+- [ ] Additional hashes (SHA-1, SHA-256)
 
 ---
 
-## 📧 Contact
-For any inquiries, please use the [GitHub Issues](https://github.com/451646464/Unnormal_logoff_login/issues) page.
+## Security & Responsible Use
+
+This tool is intended **only** for educational purposes, authorized security research, and legitimate forensic work. Only analyze data you own or have explicit permission to examine. The author is not responsible for any misuse of this software.
 
 ---
 
-**Developed by:** Rakan Al-Maliki  
-**Last update:** March 2026
+## Contributing
+
+Contributions, bug reports, and feature suggestions are welcome.
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m "Add your feature"`
+4. Push the branch: `git push origin feature/your-feature`
+5. Open a Pull Request
+
+If you find this project useful, please consider giving it a star — it helps a lot.
+
+---
+
+## Author
+
+<table>
+  <tr>
+    <td>
+      <b>Rakan Al-Moliki (راكان المليكي)</b><br>
+      Cybersecurity & Networks Graduate<br><br>
+      Email: <a href="mailto:rakanalmoliki33@gmail.com">rakanalmoliki33@gmail.com</a><br>
+      GitHub: <a href="https://github.com/451646464">github.com/451646464</a>
+    </td>
+  </tr>
+</table>
+
+---
+
+## License
+
+This project is provided for **educational and research purposes**. See the repository for license updates.
+
+<div align="center">
+
+Made by **Rakan Al-Moliki**
+
+</div>
